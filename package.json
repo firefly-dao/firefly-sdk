@@ -1,5 +1,5 @@
 {
-  "name": "@firefly-dao/firefly-sdk",
+  "name": "@firefly-dao/sdk",
   "version": "1.0.0",
   "description": "Firefly Labs SDK for cross-chain operations",
   "type": "module",
