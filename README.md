@@ -1,6 +1,6 @@
-# Firefly
+# Firefly-SDK
 
-Firefly: The ultimate gateway for lightning-fast, cost-effective cross-chain maneuvers. 
+Firefly Labs: The ultimate gateway for lightning-fast, cost-effective cross-chain maneuvers. 
 
 This SDK simplifies how you interact with the Firefly protocol. To get started, browse our <a href="https://docs.fireflylabs.app/developer">docs</a>. For technical setup and configuration, visit the <a href="https://docs.fireflylabs.app/developer">sdk docs</a> to accelerate your build process.
 <br/>
@@ -222,11 +222,11 @@ async function main() {
     // 3. Get quote
     console.log("Getting quote...");
     const quote = await client.getQuote({
-      fromChainId: 8453,
-      fromTokenAddress: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", // USDC
-      toChainId: 10,
-      toTokenAddress: "0x0000000000000000000000000000000000000000", // USDC
-      amount: "2000000", // 1 USDC (6 decimals)
+      fromChainId: 8453, // Base Mainnet
+      fromTokenAddress: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", // Base USDC
+      toChainId: 10, // Optimism Mainnet
+      toTokenAddress: "0x0000000000000000000000000000000000000000", // Optimism USDC
+      amount: "2000000", // 2 USDC (6 decimals)
       recipient: "0x...", // destination address
       sender: "0x...", // optional, source address
     });
