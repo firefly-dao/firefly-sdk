@@ -1,0 +1,57 @@
+{
+  "name": "@firefly-dao/firefly-sdk",
+  "version": "1.0.5",
+  "description": "Firefly Labs SDK for cross-chain operations",
+  "type": "module",
+  "main": "./_cjs/src/index.js",
+  "module": "./_esm/src/index.js",
+  "types": "./_types/src/index.d.ts",
+  "typings": "./_types/src/index.d.ts",
+  "sideEffects": false,
+  "exports": {
+    "types": "./_types/src/index.d.ts",
+    "import": "./_esm/src/index.js",
+    "require": "./_cjs/src/index.js"
+  },
+  "files": [
+    "./_cjs",
+    "./_esm",
+    "./_types"
+  ],
+  "scripts": {
+    "build": "pnpm run prebuild && pnpm run clean && pnpm run build:cjs && pnpm run build:esm && pnpm run build:types",
+    "build:cjs": "tsc --project ./tsconfig.build.json --module commonjs --outDir ./_cjs --removeComments --verbatimModuleSyntax false && echo {\"type\":\"commonjs\"} > ./_cjs/package.json",
+    "build:esm": "tsc --project ./tsconfig.build.json --module es2015 --outDir ./_esm && echo {\"type\": \"module\",\"sideEffects\":false} > ./_esm/package.json",
+    "build:types": "tsc --project ./tsconfig.build.json --module esnext --outDir ./_types --declarationDir ./_types --emitDeclarationOnly --declaration --declarationMap",
+    "clean": "node -e \"const fs=require('fs'); const path='dist'; if(fs.existsSync(path)) fs.rmSync(path,{recursive:true,force:true})\"",
+    "prebuild": "npm run clean",
+    "prepublishOnly": "npm run build",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:ui": "vitest --ui",
+    "test:local": "node test-local.js",
+    "dev": "vitest"
+  },
+  "keywords": [
+    "firefly",
+    "web3",
+    "cross-chain",
+    "blockchain",
+    "ethereum",
+    "defi"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^1.13.2",
+    "tslib": "^2.8.1",
+    "viem": "^2.43.3"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.16"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}
