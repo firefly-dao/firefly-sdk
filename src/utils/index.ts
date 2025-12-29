@@ -1,5 +1,5 @@
 import { type ChainType } from '../types/index.js';
-import { type Execute } from "../types/execute.js";
+import { type Execute } from "../types/Execute.js";
 
 export const handleWaitTransactionReceiptParams = (
   step: Execute['steps'][number],

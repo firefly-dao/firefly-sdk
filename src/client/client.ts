@@ -3,7 +3,7 @@ import axios, { type AxiosRequestConfig } from 'axios';
 import { APIError } from '../utils/request.js';
 import { LogLevel, MAINNET_FIREFLY_API, TESTNET_FIREFLY_API } from '../constants/index.js';
 import { handleWaitTransactionReceiptParams } from '../utils/index.js';
-import { type Execute, type ExecuteResponse, type ExecuteProgressCallback } from '../types/execute.js';
+import { type Execute, type ExecuteResponse, type ExecuteProgressCallback } from '../types/Execute.js';
 
 export interface GetQuoteParameters {
   fromChainId: number

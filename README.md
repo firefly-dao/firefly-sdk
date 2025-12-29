@@ -1,6 +1,10 @@
-# Firefly SDK
+# Firefly
 
-A TypeScript SDK for cross-chain token transfers using the Firefly protocol.
+Firefly: The ultimate gateway for lightning-fast, cost-effective cross-chain maneuvers. 
+
+This SDK simplifies how you interact with the Firefly protocol. To get started, browse our <a href="https://docs.fireflylabs.app/developer">docs</a>. For technical setup and configuration, visit the <a href="https://docs.fireflylabs.app/developer">sdk docs</a> to accelerate your build process.
+<br/>
+<br/>
 
 ## Installation
 
