@@ -13,19 +13,19 @@ You can use the following ways to get the latest version of Firefly SDK:
 **npm**
 
 ```bash
-npm install @firefly-dao/firefly-sdk
+npm install @firefly-dao/sdk
 ```
 
 **yarn**
 
 ```bash
-yarn add @firefly-dao/firefly-sdk
+yarn add @firefly-dao/sdk
 ```
 
 **pnpm**
 
 ```bash
-pnpm add @firefly-dao/firefly-sdk
+pnpm add @firefly-dao/sdk
 ```
 
 ## Quick Start
@@ -38,7 +38,7 @@ import {
   MAINNET_FIREFLY_API,
   TESTNET_FIREFLY_API,
   LogLevel,
-} from "@firefly-dao/firefly-sdk";
+} from "@firefly-dao/sdk";
 
 const client = new FireflyClient({
   baseApiUrl: MAINNET_FIREFLY_API, // or TESTNET_FIREFLY_API
@@ -51,9 +51,9 @@ const client = new FireflyClient({
 
 ```typescript
 const quote = await client.getQuote({
-  fromChainId: 8453,
+  fromChainId: 8453, // Base
   fromTokenAddress: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", // USDC
-  toChainId: 10,
+  toChainId: 10, // Optimism
   toTokenAddress: "0x0000000000000000000000000000000000000000", // USDC
   amount: "2000000", // 1 USDC (6 decimals)
   recipient: "0x...", // destination address
@@ -198,7 +198,7 @@ import {
   FireflyClient,
   MAINNET_FIREFLY_API,
   LogLevel,
-} from "@firefly-dao/firefly-sdk";
+} from "@firefly-dao/sdk";
 import { createWalletClient } from "viem";
 import { base } from "viem/chains";
 import { privateKeyToAccount } from "viem/accounts";
