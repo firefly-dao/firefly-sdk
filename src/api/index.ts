@@ -1,6 +1,7 @@
 import { TESTNET_FIREFLY_API, MAINNET_FIREFLY_API } from "../constants/index.js";
 import { axios } from "../utils/axios.js";
 import { type IChain, type IToken } from "../types/index.js";
+import { APIError } from '../utils/request.js';
 
 
 interface ResponseData<T = any> {
@@ -57,10 +58,27 @@ export function postActionApi(body: PostActionApiBody, baseApiUrl: string) {
 /**
  * Get the list of chains
  * @param baseApiUrl  the base API URL
- * @returns 
+ * @returns the list of chains
  */
-export function getChainsApi(baseApiUrl: string) {
-  return axios.get<ResponseData<IChain[]>>(`${baseApiUrl}/quote/chains`)
+export async function getChainsApi(baseApiUrl: string): Promise<IChain[]> {
+  try {
+    const res = await axios.get<ResponseData<IChain[]>>(`${baseApiUrl}/quote/chains`)
+    if (res.data.code !== 200) {
+      throw new APIError(res?.data?.message, res.status, res.data)
+    }
+    return res.data.data.map(chain => ({
+      name: chain.name,
+      chainId: chain.chainId,
+      aliasName: chain.aliasName,
+      icon: chain.icon,
+      explorer: chain.explorer,
+      tags: chain.tags,
+      depositContract: chain.depositContract,
+      type: chain.type,
+    }))
+  } catch (error: any) {
+    throw new APIError(error?.message, error?.status, error?.data)
+  }
 }
 
 
@@ -69,8 +87,35 @@ export function getChainsApi(baseApiUrl: string) {
  * @param baseApiUrl  the base API URL
  * @returns 
  */
-export function getTokensApi(baseApiUrl: string) {
-  return axios.get<ResponseData<IToken[]>>(`${baseApiUrl}/bridge/tokens`)
+
+export interface GetTokenListParams {
+  chainIds: number[];
+  depositAddressOnly: boolean;
+  term?: string; // token name
+  address?: string; // token address
+}
+export async function getTokenListApi(queryTokenListParams: GetTokenListParams, baseApiUrl: string): Promise<IToken[]> {
+  try {
+    const res = await axios.post<ResponseData<IToken[]>>(`${baseApiUrl}/quote/token/list`, {
+      ...queryTokenListParams
+    })
+
+    if (res.data.code !== 200) {
+      throw new APIError(res?.data?.message, res.status, res.data)
+    }
+    return res.data.data.map(token => ({
+      chainId: token.chainId,
+      address: token.address,
+      decimals: token.decimal,
+      icon: token.icon,
+      chainName: token.chainName,
+      aliasName: token.aliasName,
+      symbol: token.symbol,
+      verified: token.verified,
+    }))
+  } catch (error: any) {
+    throw new APIError(error?.message, error?.status, error?.data)
+  }
 }
 
 
@@ -78,14 +123,22 @@ export interface GetTokenPriceApiParams {
   tokenAddress: string
   chainId: number
 }
-export function getTokenPriceApi({ tokenAddress, chainId }: GetTokenPriceApiParams) {
-  const baseApiUrl = MAINNET_FIREFLY_API
-  return axios.get(`${baseApiUrl}/quote/token/price`, {
-    params: {
-      address: tokenAddress,
-      chainId: chainId,
+export async function getTokenPriceApi({ tokenAddress, chainId }: GetTokenPriceApiParams): Promise<number> {
+  try {
+    const res = await axios.get<ResponseData<string>>(`${MAINNET_FIREFLY_API}/quote/token/price`, {
+      params: {
+        address: tokenAddress,
+        chainId: chainId,
+      }
+    })
+
+    if (res.data.code !== 200) {
+      throw new APIError(res?.data?.message, res.status, res.data)
     }
-  })
+    return Number(res.data.data)
+  } catch (error: any) {
+    throw new APIError(error?.message, error?.status, error?.data)
+  }
 }
 
 
@@ -98,8 +151,16 @@ export interface GetExecutionHistoryApiParams {
   endTime?: number;
 
 }
-export function getExecutionHistoryApi(body: GetExecutionHistoryApiParams, baseApiUrl: string) {
-  return axios.post(`${baseApiUrl}/quote/orders`, {
-    ...body
-  })
+export async function getExecutionHistoryApi(body: GetExecutionHistoryApiParams, baseApiUrl: string): Promise<ExecutionStatusResponse[]> {
+  try {
+    const res = await axios.post<ResponseData<ExecutionStatusResponse[]>>(`${baseApiUrl}/quote/orders`, {
+      ...body
+    })
+    if (res.data.code !== 200) {
+      throw new APIError(res?.data?.message, res.status, res.data)
+    }
+    return res.data.data
+  } catch (error: any) {
+    throw new APIError(error?.message, error?.status, error?.data)
+  }
 }

@@ -30,6 +30,8 @@
     "test:watch": "vitest",
     "test:ui": "vitest --ui",
     "test:local": "node test-local.js",
+    "test:run": "tsx src/test.ts",
+    "example:query": "tsx examples/query-examples.ts",
     "dev": "vitest"
   },
   "keywords": [
@@ -48,6 +50,7 @@
     "viem": "^2.43.3"
   },
   "devDependencies": {
+    "tsx": "^4.21.0",
     "typescript": "^5.9.3",
     "vitest": "^4.0.16"
   },

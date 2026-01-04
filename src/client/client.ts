@@ -1,7 +1,7 @@
 import { createPublicClient, http, type WalletClient } from 'viem';
 import { type AxiosRequestConfig } from 'axios';
 import { axios } from '../utils/axios.js';
-import { getChainsApi, getExecutionHistoryApi, getExecutionStatus, getTokenPriceApi, getTokensApi, postActionApi, type GetExecutionHistoryApiParams, type GetExecutionStatusParams, type GetTokenPriceApiParams } from '../api/index.js';
+import { getChainsApi, getExecutionHistoryApi, getExecutionStatus, getTokenPriceApi, getTokenListApi, postActionApi, type GetExecutionHistoryApiParams, type GetExecutionStatusParams, type GetTokenPriceApiParams, type GetTokenListParams, type ExecutionStatusResponse } from '../api/index.js';
 import { APIError } from '../utils/request.js';
 import { LogLevel, MAINNET_FIREFLY_API, TESTNET_FIREFLY_API } from '../constants/index.js';
 import { handleWaitTransactionReceiptParams } from '../utils/index.js';
@@ -23,8 +23,6 @@ export interface GetQuoteParameters {
 export type BaseApiUrl = typeof MAINNET_FIREFLY_API | typeof TESTNET_FIREFLY_API;
 
 export class FireflyClient {
-  private isTestnet: boolean = false;
-
   baseApiUrl: BaseApiUrl;
   referrer?: string;
   logLevel?: LogLevel;
@@ -35,7 +33,6 @@ export class FireflyClient {
     this.referrer = referrer;
     this.baseApiUrl = baseApiUrl;
     this.logLevel = logLevel;
-    this.isTestnet = baseApiUrl === TESTNET_FIREFLY_API;
   }
 
   async getQuote(parameters: GetQuoteParameters): Promise<Execute> {
@@ -190,50 +187,36 @@ export class FireflyClient {
     return response
   }
 
-  async queryFireflyChains(): Promise<IChain[]> {
-    const res = await getChainsApi(this.baseApiUrl)
-    if (res.data.code !== 200) {
-      throw new APIError(res?.data?.message, res.status, res.data)
-    }
-    return res.data.data
+  queryFireflyChains(): Promise<IChain[]> {
+    return getChainsApi(this.baseApiUrl)
   }
 
-  async queryFireflyTokens(): Promise<IToken[]> {
-    const res = await getTokensApi(this.baseApiUrl)
-    if (res.data.code !== 200) {
-      throw new APIError(res?.data?.message, res.status, res.data)
-    }
-    return res.data.data
+  queryTokenList(queryTokenListParams: GetTokenListParams): Promise<IToken[]> {
+    return getTokenListApi(queryTokenListParams, this.baseApiUrl)
   }
 
-  async queryTokenPrice({ tokenAddress, chainId }: GetTokenPriceApiParams): Promise<number> {
-    const res = await getTokenPriceApi({ tokenAddress, chainId })
-    if (res.data.code !== 200) {
-      throw new APIError(res?.data?.message, res.status, res.data)
-    }
-    return res.data.data
+  queryTokenPrice({ tokenAddress, chainId }: GetTokenPriceApiParams): Promise<number> {
+    return getTokenPriceApi({ tokenAddress, chainId })
   }
 
-  async queryExecutionStatus({ chainId, hash }: Omit<GetExecutionStatusParams, 'baseApiUrl'>) {
-    const res = await getExecutionStatus({
-      chainId,
-      hash,
-      baseApiUrl: this.baseApiUrl
-    })
-    if (res.data.code !== 200) {
-      throw new APIError(res?.data?.message, res.status, res.data)
+  async queryExecutionStatus({ chainId, hash }: Omit<GetExecutionStatusParams, 'baseApiUrl'>): Promise<ExecutionStatusResponse> {
+    try {
+      const res = await getExecutionStatus({
+        chainId,
+        hash,
+        baseApiUrl: this.baseApiUrl
+      })
+      if (res.data.code !== 200) {
+        throw new APIError(res?.data?.message, res.status, res.data)
+      }
+      return res.data.data
+    } catch (error: any) {
+      throw new APIError(error?.message, error?.status, error?.data)
     }
-    return res.data.data
   }
 
-  async queryExecutionHistory(queryParams: GetExecutionHistoryApiParams) {
-    const res = await getExecutionHistoryApi({
-      ...queryParams,
-    }, this.baseApiUrl)
-    if (res.data.code !== 200) {
-      throw new APIError(res?.data?.message, res.status, res.data)
-    }
-    return res.data.data
+  queryExecutionHistory(queryParams: GetExecutionHistoryApiParams) {
+    return getExecutionHistoryApi(queryParams, this.baseApiUrl)
   }
 
   private async logs(message: string) {

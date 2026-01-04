@@ -5,11 +5,11 @@ import { privateKeyToAccount } from "viem/accounts";
 import { LogLevel, MAINNET_FIREFLY_API } from "./constants/index.js";
 
 async function main() {
-  const client = new FireflyClient({
-    baseApiUrl: MAINNET_FIREFLY_API, // required: MAINNET_FIREFLY_API | TESTNET_FIREFLY_API
-    referrer: 'firefly-sdk', // options:  'YOUR.SOURCE' || 'CUSTOM NAME'
-    logLevel: LogLevel.Info, // options: LogLevel.None | LogLevel.Info
-  })
+  // const client = new FireflyClient({
+  //   baseApiUrl: MAINNET_FIREFLY_API, // required: MAINNET_FIREFLY_API | TESTNET_FIREFLY_API
+  //   referrer: 'firefly-sdk', // options:  'YOUR.SOURCE' || 'CUSTOM NAME'
+  //   logLevel: LogLevel.Info, // options: LogLevel.None | LogLevel.Info
+  // })
 
   // chains test
   // client.queryFireflyChains().then(res => {
@@ -17,7 +17,10 @@ async function main() {
   // })
 
   //token test
-  // client.queryFireflyTokens().then(res => {
+  // client.queryTokenList({
+  //   chainIds: [8453],
+  //   depositAddressOnly: false,
+  // }).then(res => {
   //   console.dir(res, { depth: null })
   // })
 
@@ -48,7 +51,7 @@ async function main() {
   //   console.dir(res, { depth: null })
   // })
 
-  
+
   // const quote = await client.getQuote({
   //   "fromChainId": 8453,
   //   "fromTokenAddress":
