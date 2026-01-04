@@ -1,9 +1,12 @@
 import { createPublicClient, http, type WalletClient } from 'viem';
-import axios, { type AxiosRequestConfig } from 'axios';
+import { type AxiosRequestConfig } from 'axios';
+import { axios } from '../utils/axios.js';
+import { getChainsApi, getExecutionHistoryApi, getExecutionStatus, getTokenPriceApi, getTokensApi, postActionApi, type GetExecutionHistoryApiParams, type GetExecutionStatusParams, type GetTokenPriceApiParams } from '../api/index.js';
 import { APIError } from '../utils/request.js';
 import { LogLevel, MAINNET_FIREFLY_API, TESTNET_FIREFLY_API } from '../constants/index.js';
 import { handleWaitTransactionReceiptParams } from '../utils/index.js';
 import { type Execute, type ExecuteResponse, type ExecuteProgressCallback } from '../types/Execute.js';
+import { type IChain, type IToken } from '../types/index.js';
 
 export interface GetQuoteParameters {
   fromChainId: number
@@ -20,17 +23,22 @@ export interface GetQuoteParameters {
 export type BaseApiUrl = typeof MAINNET_FIREFLY_API | typeof TESTNET_FIREFLY_API;
 
 export class FireflyClient {
+  private isTestnet: boolean = false;
+
   baseApiUrl: BaseApiUrl;
   referrer?: string;
   logLevel?: LogLevel;
+
+
 
   constructor({ referrer = 'firefly-sdk', baseApiUrl, logLevel = LogLevel.Info }: { referrer?: string, baseApiUrl: BaseApiUrl, logLevel?: LogLevel }) {
     this.referrer = referrer;
     this.baseApiUrl = baseApiUrl;
     this.logLevel = logLevel;
+    this.isTestnet = baseApiUrl === TESTNET_FIREFLY_API;
   }
 
-  async getQuote(parameters: GetQuoteParameters) {
+  async getQuote(parameters: GetQuoteParameters): Promise<Execute> {
     const { fromChainId, fromTokenAddress, toChainId, toTokenAddress, amount, recipient, sender, slippageTolerance } = parameters
 
     const query = {
@@ -124,19 +132,19 @@ export class FireflyClient {
         let tx: string
         try {
           tx = await wallet.sendTransaction(params);
-          axios({
-            method: "POST",
-            url: `${MAINNET_FIREFLY_API}/action`,
-            data: {
+          // send action to API
+          postActionApi(
+            {
               chainId: txData.chainId,
               dstChainId: quoteRequest.data.toChainId,
               hash: tx,
-              wallet: wallet?.account?.address,
+              wallet: wallet?.account?.address || '0x',
               dstWallet: quoteRequest.data.recipient,
               fromToken: quoteRequest.data.fromTokenAddress,
               dstToken: quoteRequest.data.toTokenAddress,
             },
-          });
+            this.baseApiUrl)
+
           this.logs(`Deposit tx hash: ${tx}.`)
         } catch (err) {
           onProgress?.({ step: 'deposit', status: 'failed', error: err });
@@ -150,20 +158,18 @@ export class FireflyClient {
         try {
           while (true) {
             await new Promise((resolve) => setTimeout(resolve, 1 * 1000));
-            const transaction = await axios({
-              method: "GET",
-              url: `${this.baseApiUrl}/quote/transaction`,
-              params: {
+            const transaction = await getExecutionStatus(
+              {
                 chainId: quoteRequest.data.fromChainId,
                 hash: tx,
-              },
-            });
+                baseApiUrl: this.baseApiUrl
+              });
             if (transaction.data.data.status !== 1) {
               continue;
             } else if (transaction.data.data.status === 1) {
               this.logs('Deposit successful.')
               this.logs(`Cross-chain successful. Tx hash: ${transaction.data.data.dstHash}.`)
-              onProgress?.({ step: 'deposit', status: 'success', hash: transaction.data.data.dstHash });
+              onProgress?.({ step: 'deposit', status: 'success', hash: transaction.data.data.dstHash || '' });
               response = {
                 status: 'success',
                 message: 'transaction successful'
@@ -182,6 +188,52 @@ export class FireflyClient {
     }
 
     return response
+  }
+
+  async queryFireflyChains(): Promise<IChain[]> {
+    const res = await getChainsApi(this.baseApiUrl)
+    if (res.data.code !== 200) {
+      throw new APIError(res?.data?.message, res.status, res.data)
+    }
+    return res.data.data
+  }
+
+  async queryFireflyTokens(): Promise<IToken[]> {
+    const res = await getTokensApi(this.baseApiUrl)
+    if (res.data.code !== 200) {
+      throw new APIError(res?.data?.message, res.status, res.data)
+    }
+    return res.data.data
+  }
+
+  async queryTokenPrice({ tokenAddress, chainId }: GetTokenPriceApiParams): Promise<number> {
+    const res = await getTokenPriceApi({ tokenAddress, chainId })
+    if (res.data.code !== 200) {
+      throw new APIError(res?.data?.message, res.status, res.data)
+    }
+    return res.data.data
+  }
+
+  async queryExecutionStatus({ chainId, hash }: Omit<GetExecutionStatusParams, 'baseApiUrl'>) {
+    const res = await getExecutionStatus({
+      chainId,
+      hash,
+      baseApiUrl: this.baseApiUrl
+    })
+    if (res.data.code !== 200) {
+      throw new APIError(res?.data?.message, res.status, res.data)
+    }
+    return res.data.data
+  }
+
+  async queryExecutionHistory(queryParams: GetExecutionHistoryApiParams) {
+    const res = await getExecutionHistoryApi({
+      ...queryParams,
+    }, this.baseApiUrl)
+    if (res.data.code !== 200) {
+      throw new APIError(res?.data?.message, res.status, res.data)
+    }
+    return res.data.data
   }
 
   private async logs(message: string) {
