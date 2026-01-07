@@ -144,6 +144,9 @@ export class FireflyClient {
 
           this.logs(`Deposit tx hash: ${tx}.`)
         } catch (err) {
+          // console.log("transaction error", err)
+          // this.logs(`transaction error: ${err}`)
+          console.error("transaction error", err)
           onProgress?.({ step: 'deposit', status: 'failed', error: err });
           return {
             status: 'failed',
@@ -161,28 +164,37 @@ export class FireflyClient {
         // try {
         while (true) {
           await new Promise((resolve) => setTimeout(resolve, 1 * 1000));
-          const transaction = await getExecutionStatus(
-            {
-              chainId: quoteRequest.data.fromChainId,
-              hash: tx,
-              baseApiUrl: this.baseApiUrl
-            });
+          let transaction: ExecutionStatusResponse;
+          try {
+            let statusInfo = await getExecutionStatus(
+              {
+                chainId: quoteRequest.data.fromChainId,
+                hash: tx,
+                baseApiUrl: this.baseApiUrl
+              });
+            transaction = statusInfo.data.data;
+          } catch (err) {
+            // wait 2 seconds to retry
+            await new Promise((resolve) => setTimeout(resolve, 2000));
+            continue;
+          }
 
           // transaction status error
-          if (![-99, 0, 1, 2].includes(transaction.data.data.status)) {
-            onProgress?.({ step: 'deposit', status: 'failed', error: transaction.data.data.status });
+          if (![-99, 0, 1, 2].includes(transaction.status)) {
+            console.error("transaction status error", transaction.status)
+            onProgress?.({ step: 'deposit', status: 'failed', error: transaction.status });
             return {
               status: 'failed',
-              message: `execute function check transaction status failed: ${transaction.data.data.status}`,
+              message: `execute function check transaction status failed: ${transaction.status}`,
             }
           }
 
-          if (transaction.data.data.status !== 1) {
+          if (transaction.status !== 1) {
             continue;
-          } else if (transaction.data.data.status === 1) {
+          } else if (transaction.status === 1) {
             this.logs('Deposit successful.')
-            this.logs(`Cross-chain successful. Tx hash: ${transaction.data.data.dstHash}.`)
-            onProgress?.({ step: 'deposit', status: 'success', hash: transaction.data.data.dstHash || '' });
+            this.logs(`Cross-chain successful. Tx hash: ${transaction.dstHash}.`)
+            onProgress?.({ step: 'deposit', status: 'success', hash: transaction.dstHash || '' });
             response = {
               status: 'success',
               message: 'transaction successful'

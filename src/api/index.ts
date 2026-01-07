@@ -2,6 +2,15 @@ import { TESTNET_FIREFLY_API, MAINNET_FIREFLY_API } from "../constants/index.js"
 import { axios } from "../utils/axios.js";
 import { type IChain, type IToken } from "../types/index.js";
 import { APIError } from '../utils/request.js';
+import type {
+  GetTokenListParams,
+  GetTokenPriceApiParams,
+  GetExecutionHistoryApiParams,
+  GetExecutionStatusParams,
+  ExecutionStatusResponse,
+  GetTokenBalancesApiParams,
+  IGetMultiBalanceTokenApiRes
+} from '../types/index.js';
 
 
 interface ResponseData<T = any> {
@@ -10,27 +19,8 @@ interface ResponseData<T = any> {
   code: number;
 }
 
-export interface GetExecutionStatusParams {
-  chainId: number;
-  hash: string;
-  baseApiUrl: string;
-}
 
-export interface ExecutionStatusResponse {
-  // 0: pending, 2: origin tx success, 2: destination tx success
-  status: 0 | 2 | 1
-  chainId: number
-  fromAddress: string
-  fromHash: string
-  fromValue: string
-  dstChainId: number
-  dstHash: string | null
-  dstAddress: string
-  dstValue: string
-  isRefund: 0 | 1
-  fromTokenInfo: IToken
-  dstTokenInfo: IToken
-}
+
 export function getExecutionStatus({ chainId, hash, baseApiUrl }: GetExecutionStatusParams) {
   return axios.get<ResponseData<ExecutionStatusResponse>>(`${baseApiUrl}/quote/transaction`, {
     params: {
@@ -88,12 +78,7 @@ export async function getChainsApi(baseApiUrl: string): Promise<IChain[]> {
  * @returns 
  */
 
-export interface GetTokenListParams {
-  chainIds: number[];
-  depositAddressOnly: boolean;
-  term?: string; // token name
-  address?: string; // token address
-}
+
 export async function getTokenListApi(queryTokenListParams: GetTokenListParams, baseApiUrl: string): Promise<IToken[]> {
   try {
     const res = await axios.post<ResponseData<IToken[]>>(`${baseApiUrl}/quote/token/list`, {
@@ -119,10 +104,7 @@ export async function getTokenListApi(queryTokenListParams: GetTokenListParams, 
 }
 
 
-export interface GetTokenPriceApiParams {
-  tokenAddress: string
-  chainId: number
-}
+
 export async function getTokenPriceApi({ tokenAddress, chainId }: GetTokenPriceApiParams): Promise<number> {
   try {
     const res = await axios.get<ResponseData<string>>(`${MAINNET_FIREFLY_API}/quote/token/price`, {
@@ -142,15 +124,6 @@ export async function getTokenPriceApi({ tokenAddress, chainId }: GetTokenPriceA
 }
 
 
-export interface GetExecutionHistoryApiParams {
-  walletList: string[]
-  cursorId?: number
-  fromChainId?: number;
-  dstChainId?: number;
-  startTime?: number;
-  endTime?: number;
-
-}
 export async function getExecutionHistoryApi(body: GetExecutionHistoryApiParams, baseApiUrl: string): Promise<ExecutionStatusResponse[]> {
   try {
     const res = await axios.post<ResponseData<ExecutionStatusResponse[]>>(`${baseApiUrl}/quote/orders`, {
@@ -166,18 +139,7 @@ export async function getExecutionHistoryApi(body: GetExecutionHistoryApiParams,
 }
 
 
-export type GetTokenBalancesApiParams = {
-  chainId: number;
-  token: string;
-  wallet: string;
-}[];
 
-export type IGetMultiBalanceTokenApiRes = {
-  view_value: string; // token balance
-  status_code: number; // 0:success else error
-  chainId: number;// chain id
-  tokenAddress: string;// token address
-}[];
 
 export async function getTokenBalancesApi(data: GetTokenBalancesApiParams, baseApiUrl: string): Promise<IGetMultiBalanceTokenApiRes> {
   try {
