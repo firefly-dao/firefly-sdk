@@ -1,6 +1,6 @@
 {
   "name": "@firefly-dao/sdk",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Firefly Labs SDK for cross-chain operations",
   "type": "module",
   "main": "./_cjs/src/index.js",
