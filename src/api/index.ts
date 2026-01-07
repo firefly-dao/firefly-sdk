@@ -164,3 +164,32 @@ export async function getExecutionHistoryApi(body: GetExecutionHistoryApiParams,
     throw new APIError(error?.message, error?.status, error?.data)
   }
 }
+
+
+export type GetTokenBalancesApiParams = {
+  chainId: number;
+  token: string;
+  wallet: string;
+}[];
+
+export type IGetMultiBalanceTokenApiRes = {
+  view_value: string; // token balance
+  status_code: number; // 0:success else error
+  chainId: number;// chain id
+  tokenAddress: string;// token address
+}[];
+
+export async function getTokenBalancesApi(data: GetTokenBalancesApiParams, baseApiUrl: string): Promise<IGetMultiBalanceTokenApiRes> {
+  try {
+    const res = await axios.post<ResponseData<IGetMultiBalanceTokenApiRes>>(`${baseApiUrl}/bridge/balance/multi/token`, {
+      list: data
+    })
+    if (res.data.code !== 200) {
+      throw new APIError(res?.data?.message, res.status, res.data)
+    }
+    return res.data.data
+  } catch (error: any) {
+    console.log(error)
+    throw new APIError(error?.message, error?.status, error?.data)
+  }
+}

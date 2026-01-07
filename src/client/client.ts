@@ -1,7 +1,7 @@
 import { createPublicClient, http, type WalletClient } from 'viem';
 import { type AxiosRequestConfig } from 'axios';
 import { axios } from '../utils/axios.js';
-import { getChainsApi, getExecutionHistoryApi, getExecutionStatus, getTokenPriceApi, getTokenListApi, postActionApi, type GetExecutionHistoryApiParams, type GetExecutionStatusParams, type GetTokenPriceApiParams, type GetTokenListParams, type ExecutionStatusResponse } from '../api/index.js';
+import { getChainsApi, getExecutionHistoryApi, getExecutionStatus, getTokenPriceApi, getTokenListApi, postActionApi, type GetExecutionHistoryApiParams, type GetExecutionStatusParams, type GetTokenPriceApiParams, type GetTokenListParams, type ExecutionStatusResponse, type GetTokenBalancesApiParams, getTokenBalancesApi, type IGetMultiBalanceTokenApiRes } from '../api/index.js';
 import { APIError } from '../utils/request.js';
 import { LogLevel, MAINNET_FIREFLY_API, TESTNET_FIREFLY_API } from '../constants/index.js';
 import { handleWaitTransactionReceiptParams } from '../utils/index.js';
@@ -151,36 +151,52 @@ export class FireflyClient {
           }
         }
 
-        // check transaction status
-        try {
-          while (true) {
-            await new Promise((resolve) => setTimeout(resolve, 1 * 1000));
-            const transaction = await getExecutionStatus(
-              {
-                chainId: quoteRequest.data.fromChainId,
-                hash: tx,
-                baseApiUrl: this.baseApiUrl
-              });
-            if (transaction.data.data.status !== 1) {
-              continue;
-            } else if (transaction.data.data.status === 1) {
-              this.logs('Deposit successful.')
-              this.logs(`Cross-chain successful. Tx hash: ${transaction.data.data.dstHash}.`)
-              onProgress?.({ step: 'deposit', status: 'success', hash: transaction.data.data.dstHash || '' });
-              response = {
-                status: 'success',
-                message: 'transaction successful'
-              }
+        /**
+         * check transaction status
+         * 0 | -99 = executing
+         * 2 = successfully executed on the source chain
+         * 1 = successfully executed on the destination chain
+         * else error
+         */
+        // try {
+        while (true) {
+          await new Promise((resolve) => setTimeout(resolve, 1 * 1000));
+          const transaction = await getExecutionStatus(
+            {
+              chainId: quoteRequest.data.fromChainId,
+              hash: tx,
+              baseApiUrl: this.baseApiUrl
+            });
+
+          // transaction status error
+          if (![-99, 0, 1, 2].includes(transaction.data.data.status)) {
+            onProgress?.({ step: 'deposit', status: 'failed', error: transaction.data.data.status });
+            return {
+              status: 'failed',
+              message: `execute function check transaction status failed: ${transaction.data.data.status}`,
+            }
+          }
+
+          if (transaction.data.data.status !== 1) {
+            continue;
+          } else if (transaction.data.data.status === 1) {
+            this.logs('Deposit successful.')
+            this.logs(`Cross-chain successful. Tx hash: ${transaction.data.data.dstHash}.`)
+            onProgress?.({ step: 'deposit', status: 'success', hash: transaction.data.data.dstHash || '' });
+            response = {
+              status: 'success',
+              message: 'transaction successful'
             }
             break;
           }
-        } catch (err) {
-          onProgress?.({ step: 'deposit', status: 'failed', error: err });
-          return {
-            status: 'failed',
-            message: `execute function check transaction status failed: ${err}`,
-          }
         }
+        // } catch (err) {
+        //   onProgress?.({ step: 'deposit', status: 'failed', error: err });
+        //   return {
+        //     status: 'failed',
+        //     message: `execute function check transaction status failed: ${err}`,
+        //   }
+        // }
       }
     }
 
@@ -217,6 +233,10 @@ export class FireflyClient {
 
   queryExecutionHistory(queryParams: GetExecutionHistoryApiParams) {
     return getExecutionHistoryApi(queryParams, this.baseApiUrl)
+  }
+
+  queryTokenBalances(data: GetTokenBalancesApiParams): Promise<IGetMultiBalanceTokenApiRes> {
+    return getTokenBalancesApi(data, this.baseApiUrl)
   }
 
   private async logs(message: string) {

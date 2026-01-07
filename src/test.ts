@@ -11,10 +11,21 @@ async function main() {
   //   logLevel: LogLevel.Info, // options: LogLevel.None | LogLevel.Info
   // })
 
+  // client.queryTokenBalances([
+  //   {
+  //     chainId: 8453,
+  //     token: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+  //     wallet: "0x0955E7aD74ca25BE76d7309532a40147e08Ec8DA",
+  //   }
+  // ]).then(res => {
+  //   console.dir(res, { depth: null })
+  // })
   // chains test
   // client.queryFireflyChains().then(res => {
   //   console.dir(res, { depth: null })
   // })
+
+
 
   //token test
   // client.queryTokenList({
@@ -57,7 +68,7 @@ async function main() {
   //   "fromTokenAddress":
   //     "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
   //   "recipient": "0x0955e7ad74ca25be76d7309532a40147e08ec8da",
-  //   "amount": "600000",
+  //   "amount": "300000",
   //   "toChainId": 42161,
   //   "toTokenAddress": "0xaf88d065e77c8cc2239327c5edb3a432268e5831"
   // })
