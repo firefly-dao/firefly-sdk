@@ -1,8 +1,8 @@
-import { base } from "viem/chains";
-import { FireflyClient } from "./client/client.js";
-import { createWalletClient, http } from "viem";
-import { privateKeyToAccount } from "viem/accounts";
-import { LogLevel, MAINNET_FIREFLY_API } from "./constants/index.js";
+// import { base } from "viem/chains";
+// import { FireflyClient } from "./client/client.js";
+// import { createWalletClient, http } from "viem";
+// import { privateKeyToAccount } from "viem/accounts";
+// import { LogLevel, MAINNET_FIREFLY_API } from "./constants/index.js";
 
 async function main() {
   // const client = new FireflyClient({

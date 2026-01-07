@@ -1,4 +1,4 @@
-import { TESTNET_FIREFLY_API, MAINNET_FIREFLY_API } from "../constants/index.js";
+import { MAINNET_FIREFLY_API } from "../constants/index.js";
 import { axios } from "../utils/axios.js";
 import { type IChain, type IToken } from "../types/index.js";
 import { APIError } from '../utils/request.js';
