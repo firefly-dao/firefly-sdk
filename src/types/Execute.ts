@@ -104,7 +104,7 @@ export type ExecuteResponse = {
 }
 
 export interface ExecuteProgressInfo {
-  step: 'approve' | 'deposit';
+  step: 'approve' | 'deposit' | 'transaction_status';
   status: 'success' | 'failed';
   hash?: string;
   error?: any;

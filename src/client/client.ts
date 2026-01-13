@@ -6,7 +6,7 @@ import { APIError } from '../utils/request.js';
 import { LogLevel, MAINNET_FIREFLY_API, TESTNET_FIREFLY_API } from '../constants/index.js';
 import { handleWaitTransactionReceiptParams } from '../utils/index.js';
 import { type Execute, type ExecuteResponse, type ExecuteProgressCallback } from '../types/Execute.js';
-import type{
+import type {
   IChain, IToken,
   GetExecutionHistoryApiParams, GetExecutionStatusParams,
   GetTokenPriceApiParams, GetTokenListParams,
@@ -149,6 +149,9 @@ export class FireflyClient {
             this.baseApiUrl)
 
           this.logs(`Deposit tx hash: ${tx}.`)
+
+          // send Transaction success. notification to the user
+          onProgress?.({ step: 'deposit', status: 'success', hash: tx });
         } catch (err) {
           // console.log("transaction error", err)
           // this.logs(`transaction error: ${err}`)
@@ -188,7 +191,7 @@ export class FireflyClient {
           // transaction status error
           if (![-99, 0, 1, 2].includes(transaction.status)) {
             console.error("transaction status error", transaction.status)
-            onProgress?.({ step: 'deposit', status: 'failed', error: transaction.status });
+            onProgress?.({ step: 'transaction_status', status: 'failed', error: transaction.status });
             return {
               status: 'failed',
               message: `execute function check transaction status failed: ${transaction.status}`,
@@ -200,7 +203,7 @@ export class FireflyClient {
           } else if (transaction.status === 1) {
             this.logs('Deposit successful.')
             this.logs(`Cross-chain successful. Tx hash: ${transaction.dstHash}.`)
-            onProgress?.({ step: 'deposit', status: 'success', hash: transaction.dstHash || '' });
+            onProgress?.({ step: 'transaction_status', status: 'success', hash: transaction.dstHash || '' });
             response = {
               status: 'success',
               message: 'transaction successful'
