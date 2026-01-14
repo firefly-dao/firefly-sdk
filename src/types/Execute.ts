@@ -101,6 +101,7 @@ export type ExecuteStepItem = NonNullable<Execute['steps'][0]>
 export type ExecuteResponse = {
   status: 'idle' | 'failed' | 'success';
   message: string
+  hash?: string;
 }
 
 export interface ExecuteProgressInfo {

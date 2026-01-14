@@ -216,7 +216,8 @@ export class FireflyClient {
             onProgress?.({ step: 'transaction_status', status: 'success', hash: transaction.dstHash || '' });
             response = {
               status: 'success',
-              message: 'transaction successful'
+              message: 'transaction successful',
+              hash: tx
             }
             break;
           }
