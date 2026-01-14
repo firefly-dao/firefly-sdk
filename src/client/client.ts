@@ -135,6 +135,15 @@ export class FireflyClient {
         let tx: string
         try {
           tx = await wallet.sendTransaction(params);
+
+          const result = await publicClient?.waitForTransactionReceipt({
+            hash: tx as `0x${string}`,
+          })
+
+          // if the transaction is reverted, throw an error
+          if (result?.status === 'reverted') {
+            throw new Error(`Transaction reverted: ${result.status}`)
+          }
           // send action to API
           postActionApi(
             {
@@ -170,9 +179,8 @@ export class FireflyClient {
          * 1 = successfully executed on the destination chain
          * else error
          */
-        // try {
         while (true) {
-          await new Promise((resolve) => setTimeout(resolve, 1 * 1000));
+          await new Promise((resolve) => setTimeout(resolve, 2000));
           let transaction: ExecutionStatusResponse;
           try {
             let statusInfo = await getExecutionStatus(
@@ -182,6 +190,7 @@ export class FireflyClient {
                 baseApiUrl: this.baseApiUrl
               });
             transaction = statusInfo.data.data;
+            this.logs(`Transaction status: ${transaction.status}`)
           } catch (err) {
             // wait 2 seconds to retry
             await new Promise((resolve) => setTimeout(resolve, 2000));
@@ -192,10 +201,11 @@ export class FireflyClient {
           if (![-99, 0, 1, 2].includes(transaction.status)) {
             console.error("transaction status error", transaction.status)
             onProgress?.({ step: 'transaction_status', status: 'failed', error: transaction.status });
-            return {
+            response = {
               status: 'failed',
-              message: `execute function check transaction status failed: ${transaction.status}`,
+              message: `execute function check transaction status failed: ${transaction.status}`
             }
+            break;
           }
 
           if (transaction.status !== 1) {
@@ -211,13 +221,6 @@ export class FireflyClient {
             break;
           }
         }
-        // } catch (err) {
-        //   onProgress?.({ step: 'deposit', status: 'failed', error: err });
-        //   return {
-        //     status: 'failed',
-        //     message: `execute function check transaction status failed: ${err}`,
-        //   }
-        // }
       }
     }
 
