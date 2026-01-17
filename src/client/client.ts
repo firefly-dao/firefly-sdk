@@ -135,7 +135,18 @@ export class FireflyClient {
         let tx: string
         try {
           tx = await wallet.sendTransaction(params);
-
+          // send action to API
+          postActionApi(
+            {
+              chainId: txData.chainId,
+              dstChainId: quoteRequest.data.toChainId,
+              hash: tx,
+              wallet: wallet?.account?.address || '0x',
+              dstWallet: quoteRequest.data.recipient,
+              fromToken: quoteRequest.data.fromTokenAddress,
+              dstToken: quoteRequest.data.toTokenAddress,
+            },
+            this.baseApiUrl)
           const result = await publicClient?.waitForTransactionReceipt({
             hash: tx as `0x${string}`,
           })
@@ -149,18 +160,6 @@ export class FireflyClient {
               message: `Transaction reverted: ${result.status}`
             }
           }
-          // send action to API
-          postActionApi(
-            {
-              chainId: txData.chainId,
-              dstChainId: quoteRequest.data.toChainId,
-              hash: tx,
-              wallet: wallet?.account?.address || '0x',
-              dstWallet: quoteRequest.data.recipient,
-              fromToken: quoteRequest.data.fromTokenAddress,
-              dstToken: quoteRequest.data.toTokenAddress,
-            },
-            this.baseApiUrl)
 
           this.logs(`Deposit tx hash: ${tx}.`)
 
