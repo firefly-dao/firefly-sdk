@@ -71,7 +71,7 @@ export class FireflyClient {
     return { ...res.data.data, request }
   }
 
-  async execute({ quote, wallet, onProgress }: { quote: Execute, wallet: WalletClient, onProgress?: ExecuteProgressCallback }): Promise<ExecuteResponse> {
+  async execute({ quote, wallet, onProgress, options }: { quote: Execute, wallet: WalletClient, onProgress?: ExecuteProgressCallback, options?: { rpcUrl?: string } }): Promise<ExecuteResponse> {
     let response: ExecuteResponse = {
       status: 'idle',
       message: 'execute function: transaction execution incomplete'
@@ -87,7 +87,7 @@ export class FireflyClient {
     }
     const publicClient = createPublicClient({
       chain: wallet.chain,
-      transport: http(),
+      transport: http(options?.rpcUrl || ''),
     });
 
     for (let i = 0; i < quote.steps.length; i++) {
@@ -142,7 +142,12 @@ export class FireflyClient {
 
           // if the transaction is reverted, throw an error
           if (result?.status === 'reverted') {
-            throw new Error(`Transaction reverted: ${result.status}`)
+            console.error("transaction reverted", result)
+            onProgress?.({ step: 'deposit', status: 'reverted', error: result });
+            return {
+              status: 'reverted',
+              message: `Transaction reverted: ${result.status}`
+            }
           }
           // send action to API
           postActionApi(
@@ -161,14 +166,12 @@ export class FireflyClient {
 
           // send Transaction success. notification to the user
           onProgress?.({ step: 'deposit', status: 'success', hash: tx });
-        } catch (err) {
-          // console.log("transaction error", err)
-          // this.logs(`transaction error: ${err}`)
+        } catch (err: any) {
           console.error("transaction error", err)
           onProgress?.({ step: 'deposit', status: 'failed', error: err });
           return {
             status: 'failed',
-            message: `execute function deposit step failed: ${err}`,
+            message: err?.message,
           }
         }
 
@@ -211,13 +214,24 @@ export class FireflyClient {
           if (transaction.status !== 1) {
             continue;
           } else if (transaction.status === 1) {
-            this.logs('Deposit successful.')
-            this.logs(`Cross-chain successful. Tx hash: ${transaction.dstHash}.`)
-            onProgress?.({ step: 'transaction_status', status: 'success', hash: transaction.dstHash || '' });
-            response = {
-              status: 'success',
-              message: 'transaction successful',
-              hash: tx
+            //  Determine whether the target chain has failed
+            if (transaction.isRefund === 1) {
+              this.logs("Target chain has failed")
+              onProgress?.({ step: 'transaction_status', status: 'refund', hash: transaction.dstHash || '' });
+              response = {
+                status: 'refund',
+                message: 'The funds were returned to the USDC of the target chain.',
+                hash: tx
+              }
+            } else {
+              this.logs('Deposit successful.')
+              this.logs(`Cross-chain successful. Tx hash: ${transaction.dstHash}.`)
+              onProgress?.({ step: 'transaction_status', status: 'success', hash: transaction.dstHash || '' });
+              response = {
+                status: 'success',
+                message: 'transaction successful',
+                hash: tx
+              }
             }
             break;
           }

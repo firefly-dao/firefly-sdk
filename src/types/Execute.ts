@@ -99,14 +99,14 @@ export type ExecuteStepItem = NonNullable<Execute['steps'][0]>
 
 
 export type ExecuteResponse = {
-  status: 'idle' | 'failed' | 'success';
+  status: 'idle' | 'failed' | 'success' | 'reverted' | 'refund';
   message: string
   hash?: string;
 }
 
 export interface ExecuteProgressInfo {
   step: 'approve' | 'deposit' | 'transaction_status';
-  status: 'success' | 'failed';
+  status: 'success' | 'failed' | 'reverted' | 'refund';
   hash?: string;
   error?: any;
 }
