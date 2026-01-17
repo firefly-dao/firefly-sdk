@@ -1,4 +1,4 @@
-import { createPublicClient, custom, http, type WalletClient } from 'viem';
+import { createPublicClient, custom, type WalletClient } from 'viem';
 import { type AxiosRequestConfig } from 'axios';
 import { axios } from '../utils/axios.js';
 import { getChainsApi, getExecutionHistoryApi, getExecutionStatus, getTokenPriceApi, getTokenListApi, postActionApi, getTokenBalancesApi, } from '../api/index.js';
@@ -71,7 +71,7 @@ export class FireflyClient {
     return { ...res.data.data, request }
   }
 
-  async execute({ quote, wallet, onProgress}: { quote: Execute, wallet: WalletClient, onProgress?: ExecuteProgressCallback }): Promise<ExecuteResponse> {
+  async execute({ quote, wallet, onProgress }: { quote: Execute, wallet: WalletClient, onProgress?: ExecuteProgressCallback }): Promise<ExecuteResponse> {
     let response: ExecuteResponse = {
       status: 'idle',
       message: 'execute function: transaction execution incomplete'
