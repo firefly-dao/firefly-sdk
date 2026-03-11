@@ -215,11 +215,19 @@ export class FireflyClient {
           } else if (transaction.status === 1) {
             //  Determine whether the target chain has failed
             if (transaction.isRefund === 1) {
-              this.logs("Target chain has failed")
+              this.logs("Source chain transaction has failed")
               onProgress?.({ step: 'transaction_status', status: 'refund', hash: transaction.dstHash || '' });
               response = {
                 status: 'refund',
-                message: 'The funds were returned to the USDC of the target chain.',
+                message: 'The funds were returned to the USDC of the Source chain.',
+                hash: tx
+              }
+            } else if (transaction.isRefund === 2) {
+              this.logs("Destination chain transaction has failed")
+              onProgress?.({ step: 'transaction_status', status: 'refund', hash: transaction.dstHash || '' });
+              response = {
+                status: 'refund',
+                message: 'The funds were returned to the USDC of the Destination chain.',
                 hash: tx
               }
             } else {

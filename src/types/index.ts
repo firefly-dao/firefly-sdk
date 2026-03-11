@@ -60,7 +60,7 @@ export interface ExecutionStatusResponse {
   dstHash: string | null
   dstAddress: string
   dstValue: string
-  isRefund: 0 | 1
+  isRefund: 0 | 1 | 2
   fromTokenInfo: IToken
   dstTokenInfo: IToken
 }
